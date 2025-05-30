@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:16
+        ports:
+        - containerPort: 5432
+        env:
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_USER
+        - name: POSTGRES_PWD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: POSTGRES_PWD
+        volumeMounts:
+        - name: postgres-storage
+          mountPath: /var/lib/postgresql/data
+        - name: init-script
+          mountPath: /docker-entrypoint-initdb.d/init-db.sh
+          subPath: init-db.sh
+        - name: nfs-backup
+          mountPath: /mnt/nfs_backup
+      volumes:
+      - name: postgres-storage
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+      - name: init-script
+        configMap:
+          name: postgres-initdb-config
+          items:
+          - key: init-db.sh
+            path: init-db.sh
+      - name: nfs-backup
+        nfs:
+          server: 10.0.6.37apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-initdb-config
+data:
+  init-db.sh: |
+    #!/bin/bash
+    set -e
+
+    # Connect as the default superuser 'postgres'
+    psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
+        -- Create the 'admin' role
+        CREATE ROLE admin WITH LOGIN PASSWORD 'Inhlth123';
+
+        -- Create the 'masterdb' database owned by 'admin'
+        CREATE DATABASE masterdb OWNER admin;
+
+        -- Now connect as 'admin' and create additional databases
+        \connect masterdb;
+        CREATE DATABASE zitadel;
+        CREATE DATABASE temporal;
+        CREATE DATABASE backend;
+    EOSQL
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv-new
+spec:
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/
+  storageClassName: standard
+
+---
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 3Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+spec:
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+      nodePort: 30007
+  selector:
+    app: postgres

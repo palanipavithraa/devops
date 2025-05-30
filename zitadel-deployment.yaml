@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: zitadel-deployment
+  labels:
+    app: zitadel
+spec:
+  replicas: 1  # Number of pods
+  selector:
+    matchLabels:
+      app: zitadel
+  template:
+    metadata:
+      labels:
+        app: zitadel
+    spec:
+      containers:
+      - name: zitadel
+        image: litetex/ghcr.zitadel.zitadel:v2.70.2
+        ports:
+        - containerPort: 8080
+        command: ["/app/zitadel"]
+        args: ["start-from-init", "--masterkey", "1a77ac5081cb4b688535ab6db21cf4de", "--tlsMode", "external"]
+        env:
+        - name: ZITADEL_DATABASE_POSTGRES_HOST
+          value: "postgres-service"
+        - name: ZITADEL_DATABASE_POSTGRES_PORT
+          value: "5432"
+        - name: ZITADEL_DATABASE_POSTGRES_DATABASE
+          value: "zitadel_db"
+        - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
+          value: "admin"
+        - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
+          value: "Inhlth123"
+        - name: ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE
+          value: "disable"
+        - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
+          value: "admin"
+        - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
+          value: "Inhlth123"
+        - name: ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE
+          value: "disable"
+        - name: ZITADEL_EXTERNALSECURE
+          value: "true"
+        - name: ZITADEL_EXTERNALDOMAIN
+          value: "auth.inhlth.app"
+        volumeMounts:
+        - name: tls-cert
+          mountPath: "/etc/ssl/zitadel"  # Mount point for the certificate files
+          readOnly: true
+      volumes:
+      - name: tls-cert
+        secret:
+          secretName: zitadel-cloudflare-tls-secret  # Reference to the Cloudflare TLS Secret
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: zitadel-service
+spec:
+  selector:
+    app: zitadel
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30000  # Static port on each node
+  type: NodePort

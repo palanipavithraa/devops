@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hasura
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hasura
+  template:
+    metadata:
+      labels:
+        app: hasura
+    spec:
+      containers:
+        - name: hasura
+          image: hasura/graphql-engine:v2.26.0
+          ports:
+            - containerPort: 8080
+          env:
+            # Reference secrets for sensitive values
+            - name: HASURA_GRAPHQL_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: hasura-secret
+                  key: HASURA_GRAPHQL_DATABASE_URL
+            - name: HASURA_GRAPHQL_ADMIN_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: hasura-secret
+                  key: HASURA_GRAPHQL_ADMIN_SECRET
+            - name: HASURA_GRAPHQL_ENABLE_CONSOLE
+              value: "true"
+            - name: HASURA_GRAPHQL_CORS_DOMAIN
+              value: "*"
+          resources:  # Add resource requests and limits
+            requests:
+              memory: "512Mi"  # Minimum memory required
+              cpu: "250m"      # Minimum CPU required
+            limits:
+              memory: "1Gi"    # Maximum memory allowed
+              cpu: "500m"      # Maximum CPU allowed
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hasura
+  namespace: default
+spec:
+  type: NodePort
+  ports:
+    - port: 8080
+      targetPort: 8080
+      nodePort: 30002
+  selector:
+    app: hasura

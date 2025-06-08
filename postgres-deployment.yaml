@@ -59,11 +59,11 @@ data:
 
     # Connect as the default superuser 'postgres'
     psql -v ON_ERROR_STOP=1 --username "postgres" <<-EOSQL
-        -- Create the 'admin' role
-        CREATE ROLE admin WITH LOGIN PASSWORD 'Inhlth123';
+        -- Create the '_____' role
+        CREATE ROLE admin WITH LOGIN PASSWORD '_____';
 
-        -- Create the 'masterdb' database owned by 'admin'
-        CREATE DATABASE masterdb OWNER admin;
+        -- Create the 'masterdb' database owned by '____'
+        CREATE DATABASE masterdb OWNER _____;
 
         -- Now connect as 'admin' and create additional databases
         \connect masterdb;

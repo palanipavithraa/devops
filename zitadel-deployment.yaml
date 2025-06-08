@@ -20,7 +20,7 @@ spec:
         ports:
         - containerPort: 8080
         command: ["/app/zitadel"]
-        args: ["start-from-init", "--masterkey", "1a77ac5081cb4b688535ab6db21cf4de", "--tlsMode", "external"]
+        args: ["start-from-init", "--masterkey", "_________", "--tlsMode", "external"]
         env:
         - name: ZITADEL_DATABASE_POSTGRES_HOST
           value: "postgres-service"
@@ -29,21 +29,21 @@ spec:
         - name: ZITADEL_DATABASE_POSTGRES_DATABASE
           value: "zitadel_db"
         - name: ZITADEL_DATABASE_POSTGRES_USER_USERNAME
-          value: "admin"
+          value: "____"
         - name: ZITADEL_DATABASE_POSTGRES_USER_PASSWORD
-          value: "Inhlth123"
+          value: "______"
         - name: ZITADEL_DATABASE_POSTGRES_USER_SSL_MODE
           value: "disable"
         - name: ZITADEL_DATABASE_POSTGRES_ADMIN_USERNAME
-          value: "admin"
+          value: "_____"
         - name: ZITADEL_DATABASE_POSTGRES_ADMIN_PASSWORD
-          value: "Inhlth123"
+          value: "_____"
         - name: ZITADEL_DATABASE_POSTGRES_ADMIN_SSL_MODE
           value: "disable"
         - name: ZITADEL_EXTERNALSECURE
           value: "true"
         - name: ZITADEL_EXTERNALDOMAIN
-          value: "auth.inhlth.app"
+          value: "______"
         volumeMounts:
         - name: tls-cert
           mountPath: "/etc/ssl/zitadel"  # Mount point for the certificate files

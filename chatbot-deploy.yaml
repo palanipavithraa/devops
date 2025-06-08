@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chatbot-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chatbot
+  template:
+    metadata:
+      labels:
+        app: chatbot
+    spec:
+      containers:
+        - name: chatbot
+          image: reponame/imagename:tag
+          workingDir: /app               # Set working dir to /app so "api" is importable
+          command: ["python", "-m", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: chatbot-env
+              mountPath: /app/.env       # Mount ConfigMap file here
+              subPath: .env
+      volumes:
+        - name: chatbot-env
+          configMap:
+            name: chatbot-env-config
+            items:
+              - key: .env
+                path: .env
+      imagePullSecrets:
+        - name: ecr-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chatbot-service
+spec:
+  selector:
+    app: chatbot
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: NodePort

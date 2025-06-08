@@ -74,8 +74,8 @@ data:
     database:
       host: "tcp://postgres-service.default.svc.cluster.local:5432"
       port: 5432
-      user: "admin"
-      password: "Inhlth123"
+      user: "____"
+      password: "_____"
 
     # Temporal configuration
     frontend:
